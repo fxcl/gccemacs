@@ -2,6 +2,7 @@ name: "Build"
 
 on:
   push:
+    branches: [main]
     paths:
       - patches/**
       - flake.*
@@ -9,6 +10,7 @@ on:
 
   # Build on PR
   pull_request:
+    branches: [main]
 
   # Allow trigger for external PRs
   workflow_dispatch:
@@ -17,72 +19,71 @@ on:
   # trigger the above events.
   schedule:
     # every day at 00:00 UTC
-    - cron: '00 00 * * *'
+    - cron: "00 00 * * *"
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          # Nix Flakes doesn't work on shallow clones
+          fetch-depth: 0
 
-    - uses: actions/checkout@v2.3.4
-      with:
-        # Nix Flakes doesn't work on shallow clones
-        fetch-depth: 0
- 
-    - name: Install Nix
-      uses: cachix/install-nix-action@v16
-      with:
-        extra_nix_config: |
-          experimental-features = nix-command flakes
-          access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up binary cache
-      uses: cachix/cachix-action@v10
-      with:
-        name: emacs
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: Set up binary cache
+        uses: cachix/cachix-action@v10
+        with:
+          name: gccemacs
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
-    - name: Update inputs
-      run: rm -f flake.lock && nix flake update
+      - name: Update inputs
+        run: rm -f flake.lock && nix flake update
 
-    - name: Derive Emacs version from source
-      id: version
-      run: |
-        EMACS_URL=$(nix flake metadata --json | jq -r '.locks.nodes["emacs-src"].locked | "\(.type):\(.owner)/\(.repo)/\(.rev)"')
-        EMACS_STORE=$(nix flake prefetch $EMACS_URL --json | jq -r '.storePath')
-        EMACS_VERSION=$(grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' ${EMACS_STORE}/README)
-        CURRENT_VERSION_ASSIGNMENT=$(grep -E 'version = "[0-9].*";' flake.nix)
-        README_VERSION=$(grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' README.md)
-        echo "Derived Emacs version ${EMACS_VERSION} from source"
-        NEW_VERSION_ASSIGNMENT=$(echo $CURRENT_VERSION_ASSIGNMENT | sed "s/[0-9].*/${EMACS_VERSION}\"\;/")
-        sed -i '' "s/$CURRENT_VERSION_ASSIGNMENT/$NEW_VERSION_ASSIGNMENT/" flake.nix 
-        sed -i '' "s/$README_VERSION/$EMACS_VERSION/" README.md
-        echo "::set-output name=rev::$(nix flake metadata --json | jq -r '.locks.nodes["emacs-src"].locked.rev[0:7]')"
-        echo "::set-output name=ver::${EMACS_VERSION}"
+      - name: Derive Emacs version from source
+        id: version
+        run: |
+          EMACS_URL=$(nix flake metadata --json | jq -r '.locks.nodes["emacs-src"].locked | "\(.type):\(.owner)/\(.repo)/\(.rev)"')
+          EMACS_STORE=$(nix flake prefetch $EMACS_URL --json | jq -r '.storePath')
+          EMACS_VERSION=$(grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' ${EMACS_STORE}/README)
+          CURRENT_VERSION_ASSIGNMENT=$(grep -E 'version = "[0-9].*";' flake.nix)
+          README_VERSION=$(grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' README.md)
+          echo "Derived Emacs version ${EMACS_VERSION} from source"
+          NEW_VERSION_ASSIGNMENT=$(echo $CURRENT_VERSION_ASSIGNMENT | sed "s/[0-9].*/${EMACS_VERSION}\"\;/")
+          sed -i '' "s/$CURRENT_VERSION_ASSIGNMENT/$NEW_VERSION_ASSIGNMENT/" flake.nix 
+          sed -i '' "s/$README_VERSION/$EMACS_VERSION/" README.md
+          echo "::set-output name=rev::$(nix flake metadata --json | jq -r '.locks.nodes["emacs-src"].locked.rev[0:7]')"
+          echo "::set-output name=ver::${EMACS_VERSION}"
 
-    - name: Format flake.nix
-      run: nix run nixpkgs#nixpkgs-fmt flake.nix
+      - name: Format flake.nix
+        run: nix run nixpkgs#nixpkgs-fmt flake.nix
 
-    - name: Show derivation information
-      run: |
-        nix show-derivation ".#emacs" > emacs.drv
-        echo -e "\n\e[4mflake.lock\e[0m\n"
-        cat ./flake.lock
-        echo -e "\n\e[4mDerivation\e[0m\n"
-        cat ./emacs.drv
+      - name: Show derivation information
+        run: |
+          nix show-derivation ".#gccemacs" > gccemacs.drv
+          echo -e "\n\e[4mflake.lock\e[0m\n"
+          cat ./flake.lock
+          echo -e "\n\e[4mDerivation\e[0m\n"
+          cat ./gccemacs.drv
 
-    - uses: actions/cache@v2
-      id: cache-drv
-      with:
-        path: ./emacs.drv
-        key: emacs-drv-${{ hashFiles('emacs.drv') }}
+      - uses: actions/cache@v2
+        id: cache-drv
+        with:
+          path: ./gccemacs.drv
+          key: gccemacs-drv-${{ hashFiles('gccemacs.drv') }}
 
-    - run: nix build -L .#emacs
-      if: steps.cache-drv.outputs.cache-hit != 'true'
+      - run: nix build -L .#gccemacs
+        if: steps.cache-drv.outputs.cache-hit != 'true'
 
-    - run: rm -f emacs.drv
+      - run: rm -f gccemacs.drv
 
-    - uses: stefanzweifel/git-auto-commit-action@v4
-      if: ${{ success() }}
-      with:
-        commit_message: "automation: Emacs ${{ steps.version.outputs.ver }} -> ${{ steps.version.outputs.rev }}"
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        if: ${{ success() }}
+        with:
+          commit_message: "automation: Emacs ${{ steps.version.outputs.ver }} -> ${{ steps.version.outputs.rev }}"
