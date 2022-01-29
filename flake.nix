@@ -73,7 +73,6 @@
             src = emacs-src;
 
             buildInputs = o.buildInputs ++ [ 
-              pkgs.darwin.apple_sdk.frameworks.CoreFoundation
               prev.darwin.apple_sdk.frameworks.WebKit 
             ];
 
