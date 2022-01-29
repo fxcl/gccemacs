@@ -69,11 +69,11 @@
 
         emacs = (prev.emacs.override { srcRepo = true; nativeComp = true; withXwidgets = true; }).overrideAttrs (
           o: rec {
-            version = "29.1.50";
+            version = "29.0.50";
             src = emacs-src;
 
-            buildInputs = o.buildInputs ++ [ 
-              prev.darwin.apple_sdk.frameworks.WebKit 
+            buildInputs = o.buildInputs ++ [
+              prev.darwin.apple_sdk.frameworks.WebKit
             ];
 
             patches = [
