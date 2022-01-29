@@ -9,7 +9,6 @@ This repository provides nightly automated builds of Emacs from HEAD for macOS N
 - [X Widgets](https://www.emacswiki.org/emacs/EmacsXWidgets) (Webkit) support
 - [libvterm](https://github.com/akermu/emacs-libvterm)
 - Patched window role to work nicely with [yabai](https://github.com/koekeishiya/yabai)
-- Patched frame to hide window decorations
 
 ## Usage
 To use this flake on your system, add it to your configuration inputs & overlays.  
