@@ -24,11 +24,11 @@
         overlays = [ self.overlay ];
       });
     in
-      {
-        packages = forAllSystems (system: {
-          emacs = nixpkgsFor.${system}.emacs;
-          emacs-vterm = nixpkgsFor.${system}.emacs-vterm;
-        });
+    {
+      packages = forAllSystems (system: {
+        emacs = nixpkgsFor.${system}.emacs;
+        emacs-vterm = nixpkgsFor.${system}.emacs-vterm;
+      });
 
       overlay = final: prev: {
         emacs-vterm = prev.stdenv.mkDerivation rec {
