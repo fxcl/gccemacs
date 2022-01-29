@@ -66,22 +66,22 @@ jobs:
 
       - name: Show derivation information
         run: |
-          nix show-derivation ".#gccemacs" > gccemacs.drv
+          nix show-derivation ".#emacs" > emacs.drv
           echo -e "\n\e[4mflake.lock\e[0m\n"
           cat ./flake.lock
           echo -e "\n\e[4mDerivation\e[0m\n"
-          cat ./gccemacs.drv
+          cat ./emacs.drv
 
       - uses: actions/cache@v2
         id: cache-drv
         with:
-          path: ./gccemacs.drv
-          key: gccemacs-drv-${{ hashFiles('gccemacs.drv') }}
+          path: ./emacs.drv
+          key: emacs-drv-${{ hashFiles('emacs.drv') }}
 
-      - run: nix build -L .#gccemacs
+      - run: nix build -L .#emacs
         if: steps.cache-drv.outputs.cache-hit != 'true'
 
-      - run: rm -f gccemacs.drv
+      - run: rm -f emacs.drv
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         if: ${{ success() }}
