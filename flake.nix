@@ -69,7 +69,7 @@
 
         emacs = (prev.emacs.override { srcRepo = true; nativeComp = true; withXwidgets = true; }).overrideAttrs (
           o: rec {
-            version = "29.1";
+            version = "29.0.50";
             src = emacs-src;
 
             buildInputs = o.buildInputs ++ [
