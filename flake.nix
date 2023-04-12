@@ -79,22 +79,11 @@
             version = "29.0.90";
             src = emacs-src;
 
-            buildInputs = o.buildInputs
-              ++
-              (with prev.pkgs; [
-                autoconf
-                automake
-                texinfo
-                gcc
-                lbgccjit
-                zlib
-              ])
-              ++ prev.stdenv.isDarwin (
-              with prev.darwin.apple_sdk.frameworks; [
-                AppKit
-              ]
-            );
 
+            buildInputs = o.buildInputs ++ [
+              prev.pkgs.tree-sitter
+              prev.darwin.apple_sdk.frameworks.WebKit
+            ];
 
             patches = [
               ./patches/fix-window-role.patch
@@ -102,11 +91,12 @@
               ./patches/round-undecorated-frame.patch
              # ./patches/system-appearance.patch
             ];
+
             postPatch = o.postPatch + ''
               substituteInPlace lisp/loadup.el \
               --replace '(emacs-repository-get-branch)' '"master"'
             '';
-            configureFlags = o.configureFlags ++ [ "--with-native-compilation" ];
+            configureFlags = emacsNative.configureFlags ++ ["--with-native-compilation"];
 
             postInstall = o.postInstall + ''
               cp ${final.emacs-vterm}/vterm.el $out/share/emacs/site-lisp/vterm.el
