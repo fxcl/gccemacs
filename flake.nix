@@ -67,22 +67,43 @@
           '';
         };
 
-        emacs = (prev.emacs.override { 
-		srcRepo = true; 
-		nativeComp = true; 
-		withXwidgets = true; 
-		withGTK3 = true; 
-		withSQLite3 = true; 
-		withWebP = true; 
-	}).overrideAttrs (
+        emacs = (prev.emacs.override {
+          srcRepo = true;
+          nativeComp = true;
+          withXwidgets = true;
+          withGTK3 = true;
+          withSQLite3 = true;
+          withWebP = true;
+        }).overrideAttrs (
           o: rec {
             version = "29.0.90";
             src = emacs-src;
 
-            buildInputs = o.buildInputs ++ [ 
-	    prev.pkgs.tree-sitter 
-	    prev.darwin.apple_sdk.frameworks.WebKit 
-	    ];
+            buildInputs = o.buildInputs
+              ++
+              (with prev.pkgs; [
+                autoconf
+                automake
+                texinfo
+                gcc.lbgccjit
+                zlib
+              ])
+              ++ lib.optionals stdenv.isDarwin (
+              with prev.darwin.apple_sdk.frameworks; [
+                AppKit
+                Carbon
+                Cocoa
+                GSS
+                ImageIO
+                ImageCaptureCore
+                IOKit
+                OSAKit
+                Quartz
+                QuartzCore
+                WebKit
+              ]
+            );
+
 
             patches = [
               ./patches/fix-window-role.patch
@@ -90,11 +111,20 @@
               ./patches/round-undecorated-frame.patch
               ./patches/system-appearance.patch
             ];
-
-            postPatch = o.postPatch + ''
-              substituteInPlace lisp/loadup.el \
-              --replace '(emacs-repository-get-branch)' '"master"'
+            preConfigure = ''
+              ./autogen.sh
+            '' + ''
+              substituteInPlace lisp/international/mule-cmds.el \
+                --replace /usr/share/locale ${gettext}/share/locale
+                   for makefile_in in $(find . -name Makefile.in -print); do
+                  substituteInPlace $makefile_in --replace /bin/pwd pwd
+              done
             '';
+            # postPatch = o.postPatch + ''
+            #   substituteInPlace lisp/loadup.el \
+            #   --replace '(emacs-repository-get-branch)' '"master"'
+            # '';
+            configureFlags = emacsNative.configureFlags ++ [ "--with-native-compilation" ];
 
             postInstall = o.postInstall + ''
               cp ${final.emacs-vterm}/vterm.el $out/share/emacs/site-lisp/vterm.el
