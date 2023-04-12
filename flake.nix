@@ -116,7 +116,7 @@
               substituteInPlace lisp/loadup.el \
               --replace '(emacs-repository-get-branch)' '"master"'
             '';
-            configureFlags = emacsNative.configureFlags ++ [ "--with-native-compilation" ];
+            configureFlags = o.configureFlags ++ [ "--with-native-compilation" ];
 
             postInstall = o.postInstall + ''
               cp ${final.emacs-vterm}/vterm.el $out/share/emacs/site-lisp/vterm.el
