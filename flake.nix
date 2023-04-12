@@ -112,19 +112,10 @@
               ./patches/round-undecorated-frame.patch
               ./patches/system-appearance.patch
             ];
-            preConfigure = ''
-              ./autogen.sh
-            '' + ''
-              substituteInPlace lisp/international/mule-cmds.el \
-                --replace /usr/share/locale ${gettext}/share/locale
-                   for makefile_in in $(find . -name Makefile.in -print); do
-                  substituteInPlace $makefile_in --replace /bin/pwd pwd
-              done
+            postPatch = o.postPatch + ''
+              substituteInPlace lisp/loadup.el \
+              --replace '(emacs-repository-get-branch)' '"master"'
             '';
-            # postPatch = o.postPatch + ''
-            #   substituteInPlace lisp/loadup.el \
-            #   --replace '(emacs-repository-get-branch)' '"master"'
-            # '';
             configureFlags = emacsNative.configureFlags ++ [ "--with-native-compilation" ];
 
             postInstall = o.postInstall + ''
