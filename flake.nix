@@ -67,17 +67,28 @@
           '';
         };
 
-        emacs = (prev.emacs.override { srcRepo = true; nativeComp = true; withXwidgets = true; }).overrideAttrs (
+        emacs = (prev.emacs.override { 
+		srcRepo = true; 
+		nativeComp = true; 
+		withXwidgets = true; 
+		withGTK3 = true; 
+		withSQLite3 = true; 
+		withWebP = true; 
+	}).overrideAttrs (
           o: rec {
-            version = "29.0.50";
+            version = "29.0.90";
             src = emacs-src;
 
-            buildInputs = o.buildInputs ++ [
-              prev.darwin.apple_sdk.frameworks.WebKit
-            ];
+            buildInputs = o.buildInputs ++ [ 
+	    prev.pkgs.tree-sitter 
+	    prev.darwin.apple_sdk.frameworks.WebKit 
+	    ];
 
             patches = [
               ./patches/fix-window-role.patch
+              ./patches/poll.patch
+              ./patches/round-undecorated-frame.patch
+              ./patches/system-appearance.patch
             ];
 
             postPatch = o.postPatch + ''
