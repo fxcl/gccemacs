@@ -85,10 +85,11 @@
                 autoconf
                 automake
                 texinfo
-                gcc.lbgccjit
+                gcc
+                lbgccjit
                 zlib
               ])
-              ++ lib.optionals stdenv.isDarwin (
+              ++ prev.stdenv.isDarwin (
               with prev.darwin.apple_sdk.frameworks; [
                 AppKit
                 Carbon
