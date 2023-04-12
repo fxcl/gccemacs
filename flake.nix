@@ -92,16 +92,6 @@
               ++ prev.stdenv.isDarwin (
               with prev.darwin.apple_sdk.frameworks; [
                 AppKit
-                Carbon
-                Cocoa
-                GSS
-                ImageIO
-                ImageCaptureCore
-                IOKit
-                OSAKit
-                Quartz
-                QuartzCore
-                WebKit
               ]
             );
 
@@ -110,7 +100,7 @@
               ./patches/fix-window-role.patch
               ./patches/poll.patch
               ./patches/round-undecorated-frame.patch
-              ./patches/system-appearance.patch
+             # ./patches/system-appearance.patch
             ];
             postPatch = o.postPatch + ''
               substituteInPlace lisp/loadup.el \
