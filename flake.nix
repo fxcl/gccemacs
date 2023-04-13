@@ -76,7 +76,7 @@
           withWebP = true;
         }).overrideAttrs (
           o: rec {
-            version = "29.0.90";
+            version = "30.0.50";
             src = emacs-src;
 
 
@@ -89,14 +89,14 @@
               ./patches/fix-window-role.patch
               ./patches/poll.patch
               ./patches/round-undecorated-frame.patch
-             # ./patches/system-appearance.patch
+              # ./patches/system-appearance.patch
             ];
 
             postPatch = o.postPatch + ''
               substituteInPlace lisp/loadup.el \
               --replace '(emacs-repository-get-branch)' '"master"'
             '';
-            configureFlags = o.configureFlags ++ ["--with-native-compilation"];
+            configureFlags = o.configureFlags ++ [ "--with-native-compilation" ];
 
             postInstall = o.postInstall + ''
               cp ${final.emacs-vterm}/vterm.el $out/share/emacs/site-lisp/vterm.el
